@@ -13,15 +13,11 @@ int process_command(char *command)
 
 	argc = tokenize_command(command, argv);
 	if (argc == 0)
-	{
 		return (0);
-	}
 	if (strcmp(argv[0], "exit") == 0)
 	{
 		if (argc > 1)
-		{
 			status = atoi(argv[1]);
-		}
 		exit_shell(status);
 		return (0);
 	}
