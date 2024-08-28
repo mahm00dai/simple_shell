@@ -1,5 +1,9 @@
 # Simple Shell
 
+## Contributors
+
+See the list of [AUTHORS](./AUTHORS) who contributed to this project.
+
 ## Overview
 
 The Simple Shell project implements a basic command-line shell in C, simulating the behavior of a UNIX shell. The shell handles command input, tokenizes commands, executes them, and supports built-in commands such as `exit` and `env`. It operates in both interactive and non-interactive modes, providing a prompt when running interactively.
