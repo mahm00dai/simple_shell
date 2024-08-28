@@ -40,8 +40,6 @@ void simple_shell(void)
 			free(command);
 			continue;
 		}
-
-		free(command);
 	}
 }
 

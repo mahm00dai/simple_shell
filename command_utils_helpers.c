@@ -58,43 +58,33 @@ char *copy_token(const char *start, size_t length)
  */
 char **tokenize(char *str, char delim)
 {
-	size_t num_tokens, i = 0, j = 0;
+	size_t num_tokens, i = 0, token_len = 0;
 	char **tokens = NULL;
-	char *token_start = NULL;
-	size_t token_length = 0;
+	const char *start = NULL;
 
-	if (!str)
+	if (str == NULL)
 		return (NULL);
+
 	num_tokens = count_tokens(str, delim);
-
-	tokens = (char **)malloc((num_tokens + 2) * sizeof(char *));
-	if (!tokens)
+	tokens = malloc((num_tokens + 1) * sizeof(char *));
+	if (tokens == NULL)
 		return (NULL);
-	while (str[i])
-	{
-		while (str[i] == delim)
-			i++;
-		if (str[i] == '\0')
-			break;
-		token_start = &str[i];
-		token_length = 0;
 
-		while (str[i] && str[i] != delim)
+	while (*str)
+	{
+		if (*str != delim && start == NULL)
+			start = str;  /* Mark the start of the token */
+		else if ((*str == delim || *(str + 1) == '\0') && start != NULL)
 		{
-			i++;
-			token_length++;
+			token_len = str - start;
+			if (*str != delim && *(str + 1) == '\0')
+				token_len++;  /* Include the last character if it's not a delimiter */
+			tokens[i++] = copy_token(start, token_len);
+			start = NULL;
 		}
-		tokens[j] = copy_token(token_start, token_length);
-		if (!tokens[j])
-		{
-			for (size_t k = 0; k < j; k++)
-				free(tokens[k]);
-			free(tokens);
-			return (NULL);
-		}
-		j++;
+		str++;
 	}
-	tokens[j] = NULL;
+	tokens[i] = NULL;  /* Null-terminate the array of tokens */
 
 	return (tokens);
 }

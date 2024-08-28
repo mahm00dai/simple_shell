@@ -14,11 +14,12 @@
 char *replace_env_var(const char *str)
 {
 	size_t len = strlen(str);
-	char *result = malloc(len + 1);
+	char *result = malloc(len * 2 + 1);
 	char *ptr = result;
 	const char *env_var_start;
 	size_t var_len;
 	char *env_var_value;
+	char *env_value;
 
 	if (!result)
 		return (NULL);
@@ -43,14 +44,33 @@ char *replace_env_var(const char *str)
 			strncpy(env_var_value, env_var_start, var_len);
 			env_var_value[var_len] = '\0';
 
-			char *env_value = getenv(env_var_value);
-
+			env_value = getenv(env_var_value);
 			if (env_value)
-				strcpy(ptr, env_value);
-			else
-				strcpy(ptr, "");
+			{
+				size_t env_value_len = strlen(env_value);
 
-			ptr += strlen(ptr);
+				if (ptr + env_value_len > result + len * 2)
+				{
+					char *new_result = realloc(result, len * 2 + env_value_len + 1);
+
+					if (!new_result)
+					{
+						free(env_var_value);
+						free(result);
+						return (NULL);
+					}
+					result = new_result;
+					ptr = result + (ptr - result);
+				}
+				strcpy(ptr, env_value);
+				ptr += strlen(env_value);
+			}
+			else
+			{
+				*ptr = '\0';
+				ptr++;
+			}
+
 			free(env_var_value);
 		}
 		else
@@ -62,6 +82,7 @@ char *replace_env_var(const char *str)
 	*ptr = '\0';
 	return (result);
 }
+
 /**
  * echo_cmd - Handles the `echo` command,
  * including environment variable expansion.
@@ -90,7 +111,7 @@ void echo_cmd(char **argv)
 		}
 		else
 		{
-			handle_error("echo: memory allocation failed");
+			write(STDOUT_FILENO, "echo: memory allocation failed\n", 31);
 			return;
 		}
 		i++;
@@ -98,7 +119,6 @@ void echo_cmd(char **argv)
 
 	write(STDOUT_FILENO, "\n", 1);
 }
-
 /**
  * cd_cmd - Changes the current directory of the process
  * @argv: Array of arguments (should be "DIRECTORY" or "cd -")
