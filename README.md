@@ -63,5 +63,5 @@ This file provides the function to read user input:
 To compile the shell, use the following command:
 
 ```bash
-gcc -Wall -Werror -Wextra -pedantic -std=gnu99 shell.c command_utils.c read_command.c command_utils_helpers.c builtin_commands.c setenv_unsetenv.c -o shell
+gcc -Wall -Werror -Wextra -pedantic -std=gnu89 shell.c command_utils.c read_command.c command_utils_helpers.c builtin_commands.c setenv_unsetenv.c -o shell
 
