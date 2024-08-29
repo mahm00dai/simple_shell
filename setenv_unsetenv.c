@@ -15,7 +15,7 @@ void setenv_cmd(char **argv)
 
 	if (setenv(argv[1], argv[2], 1) == -1)
 	{
-		handle_error("setenv failed");
+		handle_error();
 	}
 }
 
@@ -33,7 +33,7 @@ void unsetenv_cmd(char **argv)
 
 	if (unsetenv(argv[1]) == -1)
 	{
-		handle_error("unsetenv failed");
+		handle_error();
 	}
 }
 

@@ -1,4 +1,5 @@
 #include "main.h"
+#include <errno.h>
 
 /**
  * process_command - Processes and executes the command
@@ -51,6 +52,12 @@ int process_command(char *command)
 		pwd();
 		return (0);
 	}
+	else if (strcmp(argv[0], "ls") == 0)
+	{
+		ls_cmd(argv);
+		return (0);
+	}
+
 	else
 	{
 		execute_command(argv);
@@ -104,19 +111,11 @@ void execute_command(char **argv)
 	if (pid == 0) /* Child process */
 	{
 		if (execve(argv[0], argv, environ) == -1)
-			handle_error(argv[0]);
+			handle_error();
 		exit(EXIT_FAILURE);
 	}
-	else if (pid < 0) /* Error forking */
-	{
-		handle_error("fork failed");
-	}
 	else /* Parent process */
-	{
 		wait(&status);
-		if (WIFEXITED(status) && WEXITSTATUS(status) != 0)
-			write(STDERR_FILENO, "Command failed\n", 15);
-	}
 }
 
 /**
@@ -140,10 +139,10 @@ void print_env(void)
  * handle_error - Handles errors by printing an error message
  * @command: The command that caused the error
  */
-void handle_error(char *command)
+void handle_error(void)
 {
-	write(STDERR_FILENO, "Error: ", 7);
-	write(STDERR_FILENO, command, strlen(command));
+	write(STDERR_FILENO, "./shell: ", 9);
+	write(STDERR_FILENO, strerror(errno), strlen(strerror(errno)));
 	write(STDERR_FILENO, "\n", 1);
 }
 
