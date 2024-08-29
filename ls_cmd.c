@@ -3,6 +3,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <pwd.h>
+#include <grp.h>
+#include <time.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
 
@@ -17,11 +20,15 @@ void print_file_info(const char *path, struct dirent *entry)
 {
 	struct stat file_stat;
 	char full_path[1024];
+	struct passwd *pw;
+	struct group *gr;
+	char mode[] = "----------";
+	char time_str[20];
 
 	snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+
 	if (stat(full_path, &file_stat) == 0)
 	{
-		char mode[] = "----------";
 		mode[0] = S_ISDIR(file_stat.st_mode) ? 'd' : '-';
 		mode[1] = (file_stat.st_mode & S_IRUSR) ? 'r' : '-';
 		mode[2] = (file_stat.st_mode & S_IWUSR) ? 'w' : '-';
@@ -33,10 +40,14 @@ void print_file_info(const char *path, struct dirent *entry)
 		mode[8] = (file_stat.st_mode & S_IWOTH) ? 'w' : '-';
 		mode[9] = (file_stat.st_mode & S_IXOTH) ? 'x' : '-';
 
-		dprintf(STDOUT_FILENO, "%s %lu %u %ld %s\n",
+		pw = getpwuid(file_stat.st_uid);
+		gr = getgrgid(file_stat.st_gid);
+		strftime(time_str, sizeof(time_str), "%b %d %H:%M", localtime(&file_stat.st_mtime));
+
+		dprintf(STDOUT_FILENO, "%s %lu %s %s %ld %s %s \n",
 			mode, (unsigned long)file_stat.st_nlink,
-			(unsigned int)file_stat.st_uid,
-			(long)file_stat.st_size, entry->d_name);
+			pw->pw_name, gr->gr_name, (long)file_stat.st_size,
+			time_str, entry->d_name);
 	}
 }
 
@@ -54,9 +65,8 @@ void ls_cmd(char **argv)
 	int long_format = 0;
 	int show_hidden = 0;
 	int i = 1;
-	int terminal_width = 80; /* Default terminal width */
-	int current_width = 0;
-	struct winsize w; /* Moved declaration to the top */
+	struct winsize w; /* Terminal width */
+	char full_path[1024]; /* Moved declaration of full_path */
 
 	/* Parse options */
 	while (argv[i] && argv[i][0] == '-')
@@ -79,9 +89,25 @@ void ls_cmd(char **argv)
 	}
 
 	/* Get terminal width */
-	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1)
+	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+	/* Print total blocks if in long format */
+	if (long_format)
 	{
-		terminal_width = w.ws_col;
+		struct stat st;
+		unsigned long total_blocks = 0;
+		while ((entry = readdir(dir)) != NULL)
+		{
+			if (!show_hidden && entry->d_name[0] == '.')
+				continue; /* Skip hidden files if not `-a` */
+			snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+			if (stat(full_path, &st) == 0)
+			{
+				total_blocks += st.st_blocks;
+			}
+		}
+		dprintf(STDOUT_FILENO, "total %lu\n", total_blocks / 2);
+		rewinddir(dir); /* Reset directory pointer */
 	}
 
 	/* Read and print each file in the directory */
@@ -91,31 +117,15 @@ void ls_cmd(char **argv)
 			continue; /* Skip hidden files if not `-a` */
 
 		if (long_format)
-		{
 			print_file_info(path, entry);
-		}
 		else
 		{
-			int name_len = strlen(entry->d_name);
-
-			/* Check if adding this file name exceeds terminal width */
-			if (current_width + name_len + 1 > terminal_width)
-			{
-				write(STDOUT_FILENO, "\n", 1);
-				current_width = 0; /* Reset width counter */
-			}
-
-			/* Print the file name */
-			write(STDOUT_FILENO, entry->d_name, name_len);
-			write(STDOUT_FILENO, " ", 1);
-			current_width += name_len + 1; /* Update width counter */
+			write(STDOUT_FILENO, entry->d_name, strlen(entry->d_name));
+			write(STDOUT_FILENO, " ", 1); /* Print space between filenames */
 		}
 	}
-
 	if (!long_format)
-	{
-		write(STDOUT_FILENO, "\n", 1); /* Print newline at the end */
-	}
+		write(STDOUT_FILENO, "\n", 1); /* Newline at the end of the output */
 
 	closedir(dir);
 }
