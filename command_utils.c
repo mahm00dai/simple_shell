@@ -141,7 +141,7 @@ void print_env(void)
  */
 void handle_error(void)
 {
-	write(STDERR_FILENO, "./shell: ", 9);
+	write(STDERR_FILENO, "./hsh: ", 7);
 	write(STDERR_FILENO, strerror(errno), strlen(strerror(errno)));
 	write(STDERR_FILENO, "\n", 1);
 }
