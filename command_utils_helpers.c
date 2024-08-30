@@ -62,9 +62,8 @@ void free_tokens(char **tokens)
 		return;
 
 	for (i = 0; tokens[i] != NULL; i++)
-	{
-		free(tokens[i]);
-	}
+		/*free(tokens[i]);*/
+	free(tokens[0]);
 	free(tokens);
 }
 
@@ -77,7 +76,7 @@ void free_tokens(char **tokens)
  */
 char **tokenize(char *str, char delim)
 {
-	size_t num_tokens, i = 0, token_len = 0;
+	size_t num_tokens, i = 0, j = 0, token_len = 0;
 	char **tokens = NULL;
 	const char *start = NULL;
 
@@ -95,10 +94,19 @@ char **tokenize(char *str, char delim)
 			start = str;  /* Mark the start of the token */
 		else if ((*str == delim || *(str + 1) == '\0') && start != NULL)
 		{
-			token_len = str - start;
-			if (*str != delim && *(str + 1) == '\0')
-				token_len++;  /* Include the last character if it's not a delimiter */
-			tokens[i++] = copy_token(start, token_len);
+			if (*str == delim)
+				token_len = str - start;
+			else
+				token_len = str - start + 1;
+			tokens[i] = copy_token(start, token_len);
+			if (tokens[i] == NULL)
+			{
+				for (j = 0; j < i; j++)
+					free(tokens[j]);
+				free(tokens);
+				return NULL;
+			}
+			i++;
 			start = NULL;
 		}
 		str++;

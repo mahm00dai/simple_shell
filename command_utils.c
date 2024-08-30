@@ -10,7 +10,7 @@
 int process_command(char *command)
 {
 	char *argv[100];
-	int argc, status = 0;
+	int i, argc, status = 0;
 
 	argc = tokenize_command(command, argv);
 	if (argc == 0)
@@ -22,6 +22,8 @@ int process_command(char *command)
 	{
 		if (argc > 1)
 			status = atoi(argv[1]);
+		for (i = 0; i < argc; i++)
+			free(argv[i]);
 		free(command);
 		exit_shell(status);
 	}
@@ -41,6 +43,11 @@ int process_command(char *command)
 		ls_cmd(argv);
 	else
 		execute_command(argv);
+
+	/* Free memory for all arguments */
+	for (i = 0; i < argc; i++)
+        	free(argv[i]);
+
 	free(command);
 	return (0);
 }
@@ -55,19 +62,26 @@ int process_command(char *command)
 int tokenize_command(char *command, char *argv[])
 {
 	char **tokens;
-	int i = 0;
+	int i = 0, j = 0;
 
 	tokens = tokenize(command, ' ');
-	if (tokens == NULL)
+	if (tokens == NULL || argv == NULL)
 		return (0);
 	while (tokens[i] != NULL && i < 99)
 	{
-		argv[i] = tokens[i];
+		argv[i] = strdup(tokens[i]);
+		if (argv[i] == NULL)
+		{
+			for (j = 0; j < i; j++)
+				free(argv[j]);
+			free_tokens(tokens);
+            		return (0);
+		}
 		i++;
 	}
 	argv[i] = NULL;
 
-	free(tokens);  /* Free the allocated memory for tokens */
+	free_tokens(tokens);  /* Free the allocated memory for tokens */
 	return (i);
 }
 

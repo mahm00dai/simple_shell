@@ -94,19 +94,16 @@ ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
  */
 char *read_command(void)
 {
-	static char *buffer;
+	char *buffer;
 	char *trimmed;
-	static size_t bufsize = 1024;
+	size_t bufsize = 1024;
 	ssize_t nread;
 
-	if (buffer == NULL) /* Allocate buffer if not already allocated */
+	buffer = malloc(bufsize);
+	if (buffer == NULL)
 	{
-		buffer = malloc(bufsize);
-		if (buffer == NULL)
-		{
-			perror("malloc");
-			exit(EXIT_FAILURE);
-		}
+		perror("malloc");
+		exit(EXIT_FAILURE);
 	}
 
 	/* Read the command from stdin using the custom _getline */
@@ -128,8 +125,8 @@ char *read_command(void)
 
 	if (trimmed != buffer)
 	{
-		strcpy(buffer, trimmed);
-		free(trimmed);
+		free(buffer);
+		buffer = trimmed;
 	}
 	return (buffer);
 }

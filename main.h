@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 /* External declaration for the environ variable */
 extern char **environ;
@@ -32,6 +33,8 @@ void echo_cmd(char **argv);
 void cd_cmd(char **argv);
 void pwd(void);
 void ls_cmd(char **argv);
+void sigint_handler(int sig);
+void cleanup(void);
 
 #endif /* MAIN_H */
 

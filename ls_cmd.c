@@ -121,12 +121,14 @@ void ls_cmd(char **argv)
 		else
 		{
 			write(STDOUT_FILENO, entry->d_name, strlen(entry->d_name));
-			write(STDOUT_FILENO, " ", 1); /* Print space between filenames */
+			write(STDOUT_FILENO, "\n", 1); /* Newline at the end of the output */
+		/*	write(STDOUT_FILENO, " ", 1);*/ /* Print space between filenames */
 		}
 	}
-	if (!long_format)
-		write(STDOUT_FILENO, "\n", 1); /* Newline at the end of the output */
-
+/**	if (!long_format)
+ *		write(STDOUT_FILENO, "\n", 1);
+	 Newline at the end of the output 
+ */
 	closedir(dir);
 }
 
