@@ -3,17 +3,6 @@
 
 /* Global pointer for command buffer */
 char *command_buffer = NULL;
-/**
-  * cleanup - Handles ^C Exits
-  */
-void cleanup(void)
-{
-	if (command_buffer != NULL)
-	{
-		free(command_buffer);
-		command_buffer = NULL;
-	}
-}
 
 /**
  * sigint_handler - Handles SIGINT signal (Ctrl+C)
@@ -41,8 +30,6 @@ void sigint_handler(int sig)
  */
 int main(void)
 {
-	atexit(cleanup);
-
 	/* Register the signal handler */
 	signal(SIGINT, sigint_handler);
 

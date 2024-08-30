@@ -34,7 +34,6 @@ void cd_cmd(char **argv);
 void pwd(void);
 void ls_cmd(char **argv);
 void sigint_handler(int sig);
-void cleanup(void);
 
 #endif /* MAIN_H */
 
