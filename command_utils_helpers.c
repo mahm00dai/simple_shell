@@ -49,6 +49,25 @@ char *copy_token(const char *start, size_t length)
 	return (token);
 }
 
+
+/**
+ * free_tokens - Frees the memory allocated for the tokens.
+ * @tokens: Array of strings (tokens) to be freed.
+ */
+void free_tokens(char **tokens)
+{
+	size_t i;
+
+	if (tokens == NULL)
+		return;
+
+	for (i = 0; tokens[i] != NULL; i++)
+	{
+		free(tokens[i]);
+	}
+	free(tokens);
+}
+
 /**
  * tokenize - Splits a string into tokens based on a delimiter.
  * @str: The string to be tokenized.

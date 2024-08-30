@@ -23,6 +23,7 @@ void exit_shell(int status);
 size_t count_tokens(const char *str, char delim);
 char *copy_token(const char *start, size_t length);
 char **tokenize(char *str, char delim);
+void free_tokens(char **tokens);
 ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
 void setenv_cmd(char **argv);
 void unsetenv_cmd(char **argv);
