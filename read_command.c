@@ -8,7 +8,7 @@
  * trim_leading_spaces - Trims leading spaces from a string
  * @str: The string to be trimmed
  *
- * Return: A pointer to the trimmed string
+ * Return: A pointer to the trimmed string (may be a new allocation)
  */
 static char *trim_leading_spaces(char *str)
 {
@@ -45,9 +45,8 @@ static char *trim_leading_spaces(char *str)
 ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 {
 	static char buffer[1024];
-	static size_t pos;
-	static ssize_t bytes_read;
-	size_t total_read = 0;
+	size_t pos = 0, total_read = 0;
+	ssize_t bytes_read = 0;
 	char *new_lineptr;
 
 	if (lineptr == NULL || n == NULL || stream == NULL)
@@ -68,12 +67,16 @@ ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 				return (total_read > 0 ? (ssize_t)total_read : -1);
 			pos = 0;
 		}
-
-		(*lineptr)[total_read++] = buffer[pos++];
-
-		if ((*lineptr)[total_read - 1] == '\n')
-			break;
-		if (total_read >= *n)
+		while (pos < (size_t)bytes_read && total_read < *n - 1)
+		{
+			(*lineptr)[total_read++] = buffer[pos++];
+			if ((*lineptr)[total_read - 1] == '\n')
+			{
+				(*lineptr)[total_read] = '\0';
+				return ((ssize_t)total_read);
+			}
+		}
+		if (total_read >= *n - 1)
 		{
 			*n *= 2;
 			new_lineptr = realloc(*lineptr, *n);
@@ -82,8 +85,6 @@ ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 			*lineptr = new_lineptr;
 		}
 	}
-	(*lineptr)[total_read] = '\0';
-	return ((ssize_t)total_read);
 }
 
 /**
@@ -94,6 +95,7 @@ ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 char *read_command(void)
 {
 	static char *buffer;
+	char *trimmed;
 	static size_t bufsize = 1024;
 	ssize_t nread;
 
@@ -122,8 +124,13 @@ char *read_command(void)
 		buffer[nread - 1] = '\0';
 
 	/* Trim leading spaces */
-	buffer = trim_leading_spaces(buffer);
+	trimmed = trim_leading_spaces(buffer);
 
+	if (trimmed != buffer)
+	{
+		strcpy(buffer, trimmed);
+		free(trimmed);
+	}
 	return (buffer);
 }
 

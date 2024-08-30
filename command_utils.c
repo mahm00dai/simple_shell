@@ -14,55 +14,35 @@ int process_command(char *command)
 
 	argc = tokenize_command(command, argv);
 	if (argc == 0)
+	{
+		free(command);
 		return (0);
+	}
 	if (strcmp(argv[0], "exit") == 0)
 	{
 		if (argc > 1)
 			status = atoi(argv[1]);
+		free(command);
 		exit_shell(status);
-		return (0);
 	}
 	else if (strcmp(argv[0], "env") == 0)
-	{
 		print_env();
-		return (0);
-	}
 	else if (strcmp(argv[0], "setenv") == 0)
-	{
 		setenv_cmd(argv);
-		return (0);
-	}
 	else if (strcmp(argv[0], "unsetenv") == 0)
-	{
 		unsetenv_cmd(argv);
-		return (0);
-	}
 	else if (strcmp(argv[0], "echo") == 0)
-	{
 		echo_cmd(argv);
-		return (0);
-	}
 	else if (strcmp(argv[0], "cd") == 0)
-	{
 		cd_cmd(argv);
-		return (0);
-	}
 	else if (strcmp(argv[0], "pwd") == 0)
-	{
 		pwd();
-		return (0);
-	}
 	else if (strcmp(argv[0], "ls") == 0)
-	{
 		ls_cmd(argv);
-		return (0);
-	}
-
 	else
-	{
 		execute_command(argv);
-		return (0);
-	}
+	free(command);
+	return (0);
 }
 
 /**
@@ -79,9 +59,7 @@ int tokenize_command(char *command, char *argv[])
 
 	tokens = tokenize(command, ' ');
 	if (tokens == NULL)
-	{
 		return (0);
-	}
 	while (tokens[i] != NULL && i < 99)
 	{
 		argv[i] = tokens[i];

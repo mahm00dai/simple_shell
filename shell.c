@@ -36,10 +36,8 @@ void simple_shell(void)
 		}
 
 		if (process_command(command) == -1)
-		{
-			free(command);
 			continue;
-		}
 	}
+	free(command);
 }
 
