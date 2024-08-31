@@ -4,28 +4,12 @@
 #include <unistd.h>
 
 /**
- * sigint_handler - Handles SIGINT signal (Ctrl+C)
- * @sig: Signal number
- */
-void sigint_handler(int sig)
-{
-	(void)sig; /* Unused parameter */
-
-	/* Print a new prompt and exit */
-	write(STDOUT_FILENO, "\n", 1);
-	exit(0);
-}
-
-/**
  * main - Entry point for the shell program
  *
  * Return: Always 0 (Success)
  */
 int main(void)
 {
-	/* Register the signal handler */
-	signal(SIGINT, sigint_handler);
-
 	/* Start the shell */
 	simple_shell();
 

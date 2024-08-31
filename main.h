@@ -34,7 +34,6 @@ void echo_cmd(char **argv);
 void cd_cmd(char **argv);
 void pwd(void);
 void ls_cmd(char **argv);
-void sigint_handler(int sig);
 void print_total_blocks(unsigned long total_blocks);
 void print_file_name(const char *name);
 void process_entries(DIR *dir, const char *path,
