@@ -103,7 +103,7 @@ char **tokenize(char *str, char delim)
 				for (j = 0; j < i; j++)
 					free(tokens[j]);
 				free(tokens);
-				return NULL;
+				return (NULL);
 			}
 			i++;
 			start = NULL;

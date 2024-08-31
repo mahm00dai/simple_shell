@@ -46,9 +46,7 @@ int process_command(char *command)
 
 	/* Free memory for all arguments */
 	for (i = 0; i < argc; i++)
-        	free(argv[i]);
-
-	free(command);
+		free(argv[i]);
 	return (0);
 }
 
@@ -75,7 +73,7 @@ int tokenize_command(char *command, char *argv[])
 			for (j = 0; j < i; j++)
 				free(argv[j]);
 			free_tokens(tokens);
-            		return (0);
+			return (0);
 		}
 		i++;
 	}
@@ -129,7 +127,6 @@ void print_env(void)
 
 /**
  * handle_error - Handles errors by printing an error message
- * @command: The command that caused the error
  */
 void handle_error(void)
 {

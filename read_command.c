@@ -34,6 +34,57 @@ static char *trim_leading_spaces(char *str)
 	return (str);
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define BUFFER_SIZE 1024
+
+/**
+ * _realloc_lineptr - Reallocates memory for the lineptr buffer
+ * @lineptr: Pointer to the buffer where the line will be stored
+ * @n: Pointer to the size of the buffer
+ *
+ * Return: 0 on success, -1 on failure
+ */
+int _realloc_lineptr(char **lineptr, size_t *n)
+{
+	char *new_lineptr;
+
+	*n *= 2;
+	new_lineptr = realloc(*lineptr, *n);
+	if (new_lineptr == NULL)
+		return (-1);
+	*lineptr = new_lineptr;
+	return (0);
+}
+
+/**
+ * _read_from_buffer - Reads data from buffer into lineptr
+ * @lineptr: Pointer to the buffer where the line will be stored
+ * @n: Pointer to the size of the buffer
+ * @buffer: Buffer to read from
+ * @pos: Pointer to the current position in the buffer
+ * @bytes_read: Total bytes read from stream into the buffer
+ * @total_read: Pointer to the total bytes read into lineptr
+ *
+ * Return: 1 if newline is encountered, 0 otherwise
+ */
+int _read_from_buffer(char **lineptr, size_t *n, char *buffer,
+			     size_t *pos, ssize_t bytes_read, size_t *total_read)
+{
+	while (*pos < (size_t)bytes_read && *total_read < *n - 1)
+	{
+		(*lineptr)[(*total_read)++] = buffer[(*pos)++];
+		if ((*lineptr)[*total_read - 1] == '\n')
+		{
+			(*lineptr)[*total_read] = '\0';
+			return (1);
+		}
+	}
+	return (0);
+}
+
 /**
  * _getline - Custom implementation of getline function
  * @lineptr: Pointer to buffer where the line will be stored
@@ -44,16 +95,15 @@ static char *trim_leading_spaces(char *str)
  */
 ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 {
-	static char buffer[1024];
+	static char buffer[BUFFER_SIZE];
 	size_t pos = 0, total_read = 0;
 	ssize_t bytes_read = 0;
-	char *new_lineptr;
 
 	if (lineptr == NULL || n == NULL || stream == NULL)
 		return (-1);
 	if (*lineptr == NULL)
 	{
-		*n = 1024;
+		*n = BUFFER_SIZE;
 		*lineptr = malloc(*n);
 		if (*lineptr == NULL)
 			return (-1);
@@ -67,23 +117,10 @@ ssize_t _getline(char **lineptr, size_t *n, FILE *stream)
 				return (total_read > 0 ? (ssize_t)total_read : -1);
 			pos = 0;
 		}
-		while (pos < (size_t)bytes_read && total_read < *n - 1)
-		{
-			(*lineptr)[total_read++] = buffer[pos++];
-			if ((*lineptr)[total_read - 1] == '\n')
-			{
-				(*lineptr)[total_read] = '\0';
-				return ((ssize_t)total_read);
-			}
-		}
-		if (total_read >= *n - 1)
-		{
-			*n *= 2;
-			new_lineptr = realloc(*lineptr, *n);
-			if (new_lineptr == NULL)
-				return (-1);
-			*lineptr = new_lineptr;
-		}
+		if (_read_from_buffer(lineptr, n, buffer, &pos, bytes_read, &total_read))
+			return ((ssize_t)total_read);
+		if (total_read >= *n - 1 && _realloc_lineptr(lineptr, n) == -1)
+			return (-1);
 	}
 }
 
@@ -105,7 +142,6 @@ char *read_command(void)
 		perror("malloc");
 		exit(EXIT_FAILURE);
 	}
-
 	/* Read the command from stdin using the custom _getline */
 	nread = _getline(&buffer, &bufsize, stdin);
 
@@ -115,14 +151,11 @@ char *read_command(void)
 		buffer = NULL;
 		return (NULL);
 	}
-
 	/* Remove newline character if present */
 	if (nread > 0 && buffer[nread - 1] == '\n')
 		buffer[nread - 1] = '\0';
-
 	/* Trim leading spaces */
 	trimmed = trim_leading_spaces(buffer);
-
 	if (trimmed != buffer)
 	{
 		free(buffer);

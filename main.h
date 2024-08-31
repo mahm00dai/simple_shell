@@ -8,6 +8,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <dirent.h>
 
 /* External declaration for the environ variable */
 extern char **environ;
@@ -34,6 +35,17 @@ void cd_cmd(char **argv);
 void pwd(void);
 void ls_cmd(char **argv);
 void sigint_handler(int sig);
+void print_total_blocks(unsigned long total_blocks);
+void print_file_name(const char *name);
+void process_entries(DIR *dir, const char *path,
+		int long_format, int show_hidden);
+int _read_from_buffer(char **lineptr, size_t *n, char *buffer,
+			     size_t *pos, ssize_t bytes_read, size_t *total_read);
+int _realloc_lineptr(char **lineptr, size_t *n);
+char *handle_env_var(char *result, char **ptr, const char **str);
+char *extract_env_var(const char **str, size_t *var_len);
+char *append_env_value(char *result, char *ptr, const char *env_value);
+char *get_env_var_value(const char *env_var);
 
 #endif /* MAIN_H */
 

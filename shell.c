@@ -1,8 +1,7 @@
 #include "main.h"
 #include <signal.h>
-
-/* Global pointer for command buffer */
-char *command_buffer = NULL;
+#include <stdlib.h>
+#include <unistd.h>
 
 /**
  * sigint_handler - Handles SIGINT signal (Ctrl+C)
@@ -12,14 +11,8 @@ void sigint_handler(int sig)
 {
 	(void)sig; /* Unused parameter */
 
-	/* Free allocated memory */
-	if (command_buffer != NULL)
-	{
-		free(command_buffer);
-		command_buffer = NULL;
-	}
-
-	/* Print a new prompt */
+	/* Print a new prompt and exit */
+	write(STDOUT_FILENO, "\n", 1);
 	exit(0);
 }
 
@@ -33,6 +26,7 @@ int main(void)
 	/* Register the signal handler */
 	signal(SIGINT, sigint_handler);
 
+	/* Start the shell */
 	simple_shell();
 
 	return (0);
@@ -46,6 +40,8 @@ int main(void)
  */
 void simple_shell(void)
 {
+	char *command_buffer = NULL;
+
 	while (1)
 	{
 		if (isatty(STDIN_FILENO))
@@ -65,7 +61,13 @@ void simple_shell(void)
 			continue;
 
 		/* Free the command buffer after processing */
+		free(command_buffer);
 		command_buffer = NULL;
+	}
+
+	if (command_buffer != NULL)
+	{
+		free(command_buffer);
 	}
 }
 

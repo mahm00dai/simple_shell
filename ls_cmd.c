@@ -42,33 +42,90 @@ void print_file_info(const char *path, struct dirent *entry)
 
 		pw = getpwuid(file_stat.st_uid);
 		gr = getgrgid(file_stat.st_gid);
-		strftime(time_str, sizeof(time_str), "%b %d %H:%M", localtime(&file_stat.st_mtime));
+		strftime(time_str, sizeof(time_str), "%b %d %H:%M",
+				localtime(&file_stat.st_mtime));
 
-		dprintf(STDOUT_FILENO, "%s %lu %s %s %ld %s %s \n",
-			mode, (unsigned long)file_stat.st_nlink,
-			pw->pw_name, gr->gr_name, (long)file_stat.st_size,
-			time_str, entry->d_name);
+		dprintf(STDOUT_FILENO, "%s %lu %s %s %ld %s %s\n",
+				mode, (unsigned long)file_stat.st_nlink,
+				pw ? pw->pw_name : "unknown",
+				gr ? gr->gr_name : "unknown",
+				(long)file_stat.st_size,
+				time_str, entry->d_name);
+	}
+}
+
+/**
+ * print_total_blocks - Prints the total number of blocks
+ * @total_blocks: Total number of blocks
+ */
+void print_total_blocks(unsigned long total_blocks)
+{
+	dprintf(STDOUT_FILENO, "total %lu\n", total_blocks / 2);
+}
+
+/**
+ * print_file_name - Prints a file name
+ * @name: Name of the file
+ */
+void print_file_name(const char *name)
+{
+	write(STDOUT_FILENO, name, strlen(name));
+	write(STDOUT_FILENO, "\n", 1);
+}
+
+/**
+ * process_entries - Processes directory entries
+ * @dir: Directory stream
+ * @path: Path to the directory
+ * @long_format: Whether to use long format
+ * @show_hidden: Whether to show hidden files
+ */
+void process_entries(DIR *dir, const char *path,
+		int long_format, int show_hidden)
+{
+	struct dirent *entry;
+	struct stat st;
+	char full_path[1024];
+	unsigned long total_blocks = 0;
+
+	if (long_format)
+	{
+		while ((entry = readdir(dir)) != NULL)
+		{
+			if (!show_hidden && entry->d_name[0] == '.')
+				continue;
+			snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
+			if (stat(full_path, &st) == 0)
+				total_blocks += st.st_blocks;
+		}
+		print_total_blocks(total_blocks);
+		rewinddir(dir);
+	}
+
+	while ((entry = readdir(dir)) != NULL)
+	{
+		if (!show_hidden && entry->d_name[0] == '.')
+			continue;
+		if (long_format)
+			print_file_info(path, entry);
+		else
+			print_file_name(entry->d_name);
 	}
 }
 
 /**
  * ls_cmd - Handles the `ls` command to list files in a directory
  * @argv: Array of arguments, e.g., `ls -l -a [directory]`
- *
- * Description: Lists files with options like `-l` and `-a`.
  */
 void ls_cmd(char **argv)
 {
 	DIR *dir;
-	struct dirent *entry;
 	char *path = ".";
 	int long_format = 0;
 	int show_hidden = 0;
 	int i = 1;
-	struct winsize w; /* Terminal width */
-	char full_path[1024]; /* Moved declaration of full_path */
+	struct winsize w;
 
-	/* Parse options */
 	while (argv[i] && argv[i][0] == '-')
 	{
 		if (strchr(argv[i], 'l'))
@@ -77,9 +134,8 @@ void ls_cmd(char **argv)
 			show_hidden = 1;
 		i++;
 	}
-
 	if (argv[i])
-		path = argv[i]; /* Last argument is the path */
+		path = argv[i];
 
 	dir = opendir(path);
 	if (dir == NULL)
@@ -88,47 +144,8 @@ void ls_cmd(char **argv)
 		return;
 	}
 
-	/* Get terminal width */
 	ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
-
-	/* Print total blocks if in long format */
-	if (long_format)
-	{
-		struct stat st;
-		unsigned long total_blocks = 0;
-		while ((entry = readdir(dir)) != NULL)
-		{
-			if (!show_hidden && entry->d_name[0] == '.')
-				continue; /* Skip hidden files if not `-a` */
-			snprintf(full_path, sizeof(full_path), "%s/%s", path, entry->d_name);
-			if (stat(full_path, &st) == 0)
-			{
-				total_blocks += st.st_blocks;
-			}
-		}
-		dprintf(STDOUT_FILENO, "total %lu\n", total_blocks / 2);
-		rewinddir(dir); /* Reset directory pointer */
-	}
-
-	/* Read and print each file in the directory */
-	while ((entry = readdir(dir)) != NULL)
-	{
-		if (!show_hidden && entry->d_name[0] == '.')
-			continue; /* Skip hidden files if not `-a` */
-
-		if (long_format)
-			print_file_info(path, entry);
-		else
-		{
-			write(STDOUT_FILENO, entry->d_name, strlen(entry->d_name));
-			write(STDOUT_FILENO, "\n", 1); /* Newline at the end of the output */
-		/*	write(STDOUT_FILENO, " ", 1);*/ /* Print space between filenames */
-		}
-	}
-/**	if (!long_format)
- *		write(STDOUT_FILENO, "\n", 1);
-	 Newline at the end of the output 
- */
+	process_entries(dir, path, long_format, show_hidden);
 	closedir(dir);
 }
 
